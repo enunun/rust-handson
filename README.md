@@ -1,54 +1,64 @@
-# claude-docker-template
+# Rustでリレーショナルデータベースを作るハンズオン
 
-Claude Code for VSCode + Docker(mise) + rtkで開発するときの，最小構成のテンプレート．
-言語や作るものは特に決めず，devcontainer・mise・rtk・lefthookの土台だけを提供する．
+PostgreSQLのクライアントから接続できるリレーショナルデータベース`ferrodb`を，Rustで一から作るハンズオンである．
+23回のIterationで1つのプログラムを育てながら，Rustの言語機能とデータベースの内部の仕組みを学ぶ．
 
-## 構成
-
-``` text
-.devcontainer/
-  devcontainer.json  VSCode Dev Containersの設定．claude-home/rtk-homeを
-                      ホストにバインドマウントし，資格情報や履歴をコンテナの
-                      再作成後も保つ．
-  Dockerfile          mise公式イメージをベースに，rtk/lefthookをmiseで入れる．
-                      プロジェクト固有のパッケージ・ツールチェーンはここに追加する．
-  compose.yml         コンテナを起動したままにする(sleep infinity)だけの設定．
-.claude/
-  settings.json        Bashツール呼び出しをrtk経由に書き換えるフック．
-                        enunun/system-development-skillsを参照するプラグイン設定も含む．
-.rtk/
-  filters.toml          プロジェクト固有のrtkフィルタ(雛形のみ)．
-mise.toml               ツールの版とタスク(install/fmt/lint/test/check/setup)の雛形．
-lefthook.yml             コミット時の検査の雛形．
-CLAUDE.md                プロジェクト向けのClaude Code指示の雛形．
-.gitignore
+```console
+$ psql -h 127.0.0.1 -p 5433 -U alice ferro
+ferro=> SELECT d.title, COUNT(*) AS n FROM emp e LEFT JOIN dept d ON e.dept = d.code GROUP BY d.title;
 ```
 
-## 使い方
+## 学ぶこと
 
-1. このフォルダの中身を，新しいプロジェクトのリポジトリのルートにコピーする．
-2. `PROJECT_NAME`という文字列を，プロジェクト名に置き換える(`devcontainer.json`，`compose.yml`，`CLAUDE.md`)．
-3. `mise.toml`の`[tools]`に，プロジェクトが使う言語・ツールを追加する．
-4. `mise.toml`の各タスク(`install`/`fmt`/`lint`/`test`)と，`lefthook.yml`の`format`コマンドを，実際のコマンドに置き換える．
-5. `Dockerfile`に，プロジェクトのビルドに必要なシステムパッケージがあれば追加する．
-6. VSCodeで「Reopen in Container」を実行する．初回は`mise run setup`が走る．
-7. `.gitignore`から`pnpm-lock.yaml`を削除し，lockファイルがコミットされるようにする．
-8. `mise.toml`の`[settings]`と`lockfile = true`の行のコメントを解除し，lockファイルを使用するようにする．
+- Rust：所有権と借用，代数的データ型(`struct`と`enum`)による型のモデリング，トレイトとジェネリクス，`Result`によるエラー処理，ライフタイム，ファイルとネットワークの入出力，スレッド
+- データベース：SQLの字句解析と構文解析，実行計画，スロット付きページ，バッファプール，B+木，MVCC，WAL，PostgreSQLのプロトコル
+- 開発の進め方：テストリストから始めるテスト駆動開発と，C4モデルによる設計ドキュメント
 
-## rtk(Rust Token Killer)について
+## 前提
 
-シェルコマンドの出力を絞り込み，トークン消費を抑えるCLIプロキシ．
-`.claude/settings.json`のフックが，Claude CodeのBashツール呼び出しを自動的に`rtk`経由に書き換える．
-コマンドの詳しい対応表は[rtkのリポジトリ](https://github.com/rtk-ai/rtk)を参照．
-`~/.claude/CLAUDE.md`からrtkの使い方を読み込ませておくと，全プロジェクトで効く．
+- Rust以外のプログラミング言語(Python，JavaScript，Go，Javaなど)で，プログラムを書いた経験がある．
+- 単体テストを書いたことがあり，テスト駆動開発の考え方を知っている．
+- Rustとデータベースの内部は知らなくてよい．SQLは`SELECT`と`INSERT`を書いたことがあれば十分である．
 
-## 共有スキルについて
+## 環境の準備
 
-`.claude/settings.json`は，[enunun/system-development-skills](https://github.com/enunun/system-development-skills)をプラグインのマーケットプレイスとして参照する設定を含む．成果物を仕上げる`finalize-artifacts`スキルなど，プロジェクトを問わず使うスキルはそちらに集約されている．
+VS CodeのDev Containersで開くと，必要なものがそろう．
 
-## claude-home / rtk-home について
+1. このリポジトリをクローンし，VS Codeで開く．
+2. コマンドパレットで「Dev Containers: Reopen in Container」を実行する．初回は`mise run setup`が実行される．
+3. ターミナルで`cargo --version`を実行し，`cargo 1.98.1`と表示されることを確かめる．
 
-`.devcontainer/claude-home/`と`.devcontainer/rtk-home/`は，コンテナ作成時に
-`initializeCommand`が自動生成し，
-コンテナ内の`/root/.claude`や`/root/.config/rtk`などにバインドマウントされる．
-資格情報や履歴を含むため，`.gitignore`で除外している．
+Dev Containersを使わない場合は，次を用意する．
+
+- Rust 1.98.1(`rustup`または`mise`で入れる)
+- CのリンカーとCの標準ライブラリ(Debian系では`gcc`と`libc6-dev`)
+- Node.jsとpnpm(`pnpm install`を実行する．Mermaidの図の検査に使う)
+- `psql`(Iteration 20から使う．Debian系では`postgresql-client`)
+
+## 進め方
+
+各Iterationは`iterations/iteration-NN/`にある．
+
+- `exercise/`：受講者が作業する場所．`exercise/README.md`から始める．
+- `solution/`：演習を終えた状態と模範解答．自分の答えと見比べる．
+
+どのIterationも，テストリスト → 設計ドキュメント → テスト駆動の実装 → 設計レビューの順に進める．
+
+- [ロードマップ](docs/ROADMAP.md)：各Iterationで作る機能と学ぶこと
+- [テスト駆動開発とテストリスト](docs/tdd.md)
+- [設計ドキュメントの書き方](docs/design.md)
+- [Rustのノート](docs/rust/README.md)：各Iterationで初めて使う文法と概念
+- [データベースのノート](docs/db/README.md)：各Iterationで初めて扱う理論
+
+## Iterationの一覧
+
+| # | 作る機能 |
+| --- | --- |
+| [0](iterations/iteration-00/exercise/README.md) | プロジェクトの作成と，`VALUES (1, 2 + 3)`の字句解析 |
+| [1](iterations/iteration-01/exercise/README.md) | `VALUES`の算術式を構文解析して評価する |
+| [2](iterations/iteration-02/exercise/README.md) | 真偽値，比較，`NULL`と3値論理 |
+| [3](iterations/iteration-03/exercise/README.md) | 文字列 |
+| [4](iterations/iteration-04/exercise/README.md) | SQLSTATEとエラー位置 |
+| [5](iterations/iteration-05/exercise/README.md) | `CREATE TABLE`，`INSERT`，`SELECT * FROM` |
+| [6](iterations/iteration-06/exercise/README.md) | REPL |
+| [7](iterations/iteration-07/exercise/README.md) | `WHERE`，列の選択，別名 |

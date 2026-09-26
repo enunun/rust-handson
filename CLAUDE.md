@@ -1,6 +1,7 @@
-# PROJECT_NAME
+# ferrodb hands-on
 
-TODO: Describe the project overview.
+A hands-on course (in Japanese) where learners build `ferrodb`, a PostgreSQL-wire-compatible relational database, in Rust over 23 Iterations.
+The course is built with the `system-development-skills:build-handson` skill. Read `COURSE.md` (decisions, conventions, pitfalls) and `docs/ROADMAP.md` (what each Iteration builds) before changing any course material.
 
 # RTK (Rust Token Killer)
 
@@ -8,15 +9,18 @@ Prefix every shell command with `rtk`, including each command in an `&&` chain â
 
 ## Working conventions
 
-TODO: Describe the development conventions for this project (branching strategy, commit granularity, whether reviews are required, etc.).
-
+- Build one Iteration per run, in ascending order. Changes to features, topics or design documents go into `docs/ROADMAP.md` or `COURSE.md` first, agreed with the user.
+- Every output shown in the material (compiler messages, test failures, REPL and psql sessions) is copied from a real run.
 - `git commit` runs the lefthook hooks. If they fail, fix the reported issues. Do not use `--no-verify`.
 
 - Run `mise run check` after making changes.
 
 ## Code map
 
-TODO: Describe the main directory structure and the purpose of each directory.
+- `iterations/iteration-NN/solution/`: model answers; Cargo workspace members (`ferrodb-NN-solution`, lib name `ferrodb`).
+- `iterations/iteration-NN/exercise/`: learner packages (`ferrodb`), standalone and listed one by one in the root `Cargo.toml` `exclude`.
+- `docs/`: roadmap, TDD and design guides, per-Iteration notes (`docs/rust/`, `docs/db/`).
+- `scripts/`: Mermaid syntax check, design-to-code check, exercise tests.
 
 # Artifact Cleanup
 

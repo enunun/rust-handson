@@ -74,5 +74,8 @@ tmp/
 
 # node
 node_modules/
-# 実際に使用する場合には、pnpm-lock.yamlをコミットすることが推奨される
-pnpm-lock.yaml
+
+# Rust
+/target/
+/iterations/*/exercise/target/
+/iterations/*/exercise/Cargo.lock

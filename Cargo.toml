@@ -1,0 +1,16 @@
+# 模範解答(iterations/*/solution)のワークスペース．
+# 演習(iterations/*/exercise)は受講者がその中でcargoを実行する単独のパッケージなので，
+# excludeに1つずつ加える(excludeはglobを受け付けない)．
+[workspace]
+resolver = "3"
+members = ["iterations/*/solution"]
+exclude = [
+  "iterations/iteration-00/exercise",
+  "iterations/iteration-01/exercise",
+  "iterations/iteration-02/exercise",
+  "iterations/iteration-03/exercise",
+  "iterations/iteration-04/exercise",
+  "iterations/iteration-05/exercise",
+  "iterations/iteration-06/exercise",
+  "iterations/iteration-07/exercise",
+]

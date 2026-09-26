@@ -8,6 +8,9 @@ RUN apt-get update \
 	procps \
 	jq \
 	libatomic1 \
+	gcc \
+	libc6-dev \
+	postgresql-client \
 	&& rm -rf /var/lib/apt/lists/*
 
 # ここにプロジェクト固有のシステムパッケージ・ツールチェーンのインストールを追加する

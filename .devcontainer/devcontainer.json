@@ -1,12 +1,15 @@
 {
-	"name": "PROJECT_NAME-dev",
+	"name": "rust-handson-dev",
 	"dockerComposeFile": "./compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspaces",
 	"shutdownAction": "stopCompose",
 	"customizations": {
 		"vscode": {
-			"extensions": ["anthropic.claude-code", "growthjack.claude-code-usage"]
+			"extensions": [
+				"anthropic.claude-code",
+				"growthjack.claude-code-usage"
+			]
 		}
 	},
 	"postCreateCommand": "mise run setup",

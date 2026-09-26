@@ -1,6 +1,10 @@
 {
 	"config": {
-		"default": true
+		"default": true,
+		// Iterationごとに同じ小見出し(要件，使用例など)を繰り返すため，兄弟見出しの重複だけを禁止する．
+		"MD024": { "siblings_only": true },
+		// 日本語の文は1文1行で書くため，行の長さは制限しない．
+		"MD013": false
 	},
 	"globs": [
 		"**/*.md"
