@@ -65,3 +65,4 @@ Dev Containersを使わない場合は，次を用意する．
 | [8](iterations/iteration-08/exercise/README.md) | `UPDATE`，`DELETE`，`DROP TABLE`，制約 |
 | [9](iterations/iteration-09/exercise/README.md) | `ORDER BY`，`OFFSET`，`FETCH FIRST`，`DISTINCT` |
 | [10](iterations/iteration-10/exercise/README.md) | 実行計画と`EXPLAIN` |
+| [11](iterations/iteration-11/exercise/README.md) | 結合(`CROSS`，`INNER`，`LEFT JOIN`) |

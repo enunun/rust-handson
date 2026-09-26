@@ -687,18 +687,26 @@ Iteration 7〜9で1つの関数に書いた`SELECT`の処理を，演算子ご�
 
 - `FROM a, b`，`CROSS JOIN`，`INNER JOIN ... ON`，`LEFT [OUTER] JOIN ... ON`を扱う．
 - 表の別名(`FROM emp e`)と，修飾した列名(`e.name`)を扱う．`EXPLAIN`では列名を修飾して表示する．
-- どちらの表の列か決まらない列名は`42702`とする．
+- どちらの表の列か決まらない列名は`42702`とする．`FROM`にない表で修飾した列名は`42P01`，同じ名前(別名)の表が2つあれば`42712`とする．
 - `LEFT JOIN`で相手のない行は，右側の列を`NULL`にする．
 
 ### 使用例
 
 ```console
 ferrodb> SELECT e.name, d.title FROM emp e LEFT JOIN dept d ON e.dept = d.code;
+  NAME  |    TITLE
+--------+-------------
+ Sato   | Development
+ Suzuki | Development
+ Tanaka | Operations
+ Ito    |
+(4 rows)
 ```
 
 ### モジュール
 
-- `plan::binder`：複数の表にまたがる名前解決(スコープ)
+- `sql::ast`：`enum TableRef`，`struct Join`，`enum JoinKind`，`Expr::QualifiedColumn`
+- `plan::binder`：複数の表にまたがる名前解決(`Scope`)．`bind_select`はカタログから`FROM`の表を引く．
 - `exec::join`：`NestedLoopJoin`
 
 ### 設計ドキュメントの更新
@@ -713,7 +721,9 @@ ferrodb> SELECT e.name, d.title FROM emp e LEFT JOIN dept d ON e.dept = d.code;
 
 ### 既存テストへの影響
 
-`EXPLAIN`の期待値のうち，列名の表示が修飾名(`USERS.NAME`)に変わる．
+- `EXPLAIN`の期待値のうち，列名の表示が修飾名(`USERS.NAME`)に変わる．
+- 構文解析のテストの`Select::from`の期待値が，表の名前から`TableRef`に変わる．
+- 名前解決のテストで，`bind`に渡す列の並びが`Scope`に，`bind_select`に渡す表の定義がカタログに変わる．
 
 ## Iteration 12：集約
 

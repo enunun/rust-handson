@@ -15,3 +15,4 @@
 | [8](iteration-08.md) | `iter_mut`による書き換え，`retain`，借用の衝突，計算と変更の分離，`if let`，`HashSet`と`Hash`の導出，`contains`と`to_vec` |
 | [9](iteration-09.md) | `Ordering`と`then_with`，`Ord`と`PartialOrd`の実装，`sort_by`と安定な並べ替え，`skip`と`take`，`contains`による重複の検査，`unwrap_or_default` |
 | [10](iteration-10.md) | トレイトの定義と実装，トレイトオブジェクトと`Box<dyn Trait>`，静的ディスパッチと動的ディスパッチ，`while let`，`let ... else`，イテレーターを構造体に持つ |
+| [11](iteration-11.md) | トレイトオブジェクトを組み合わせる構造体，`Option::take`と`replace`，スライスのパターン，`fold`と`reduce`，`self`を受け取るメソッド，`extend_from_slice`と`repeat_n`，`as_ref`，`unreachable!` |
