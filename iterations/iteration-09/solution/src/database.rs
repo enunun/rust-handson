@@ -1,0 +1,369 @@
+use std::collections::HashMap;
+
+use crate::catalog::{Catalog, Column, SchemaError, TableSchema, UniqueConstraint};
+use crate::error::Error;
+use crate::exec::dml;
+use crate::exec::eval::{eval, matches_filter};
+use crate::exec::sort::{KeyedRow, SortOrder, sort};
+use crate::plan::binder::{BindError, BoundExpr, bind};
+use crate::sql::ast::{
+    Assignment, ColumnConstraint, CreateTable, Delete, DropTable, Expr, Insert, OrderBy, Select,
+    SelectItem, Statement, Update, Values,
+};
+use crate::sql::lexer::tokenize;
+use crate::sql::parser::parse;
+use crate::value::{Row, Value};
+
+/// 表の定義と行を持ち，SQLの文を実行するデータベース．
+#[derive(Debug, Default)]
+pub struct Database {
+    catalog: Catalog,
+    rows: HashMap<String, Vec<Row>>,
+}
+
+/// 文を実行した結果．
+#[derive(Debug, PartialEq)]
+pub enum StatementResult {
+    Rows(QueryResult),
+    CreateTable,
+    Insert { count: usize },
+    Update { count: usize },
+    Delete { count: usize },
+    DropTable,
+}
+
+/// 問い合わせの結果の表．
+#[derive(Debug, PartialEq)]
+pub struct QueryResult {
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<Value>>,
+}
+
+/// `ORDER BY`のキーと，その値の求め方．
+struct SortKey {
+    source: SortSource,
+    order: SortOrder,
+}
+
+/// 並べ替えのキーの値の求め方．
+enum SortSource {
+    /// 結果の列の値を使う．
+    Output(usize),
+    /// 表の行について式を評価する．
+    Input(BoundExpr),
+}
+
+/// 名前のない式の結果の列名．
+const UNNAMED_COLUMN: &str = "?column?";
+
+impl Database {
+    /// 表のない空のデータベースを作る．
+    pub fn new() -> Database {
+        Database::default()
+    }
+
+    /// SQLの文を1つ実行する．
+    pub fn execute(&mut self, sql: &str) -> Result<StatementResult, Error> {
+        let tokens = tokenize(sql)?;
+        match parse(&tokens)? {
+            Statement::Values(values) => Ok(StatementResult::Rows(evaluate_values(&values)?)),
+            Statement::CreateTable(create) => self.create_table(create),
+            Statement::Insert(insert) => self.insert(insert),
+            Statement::Select(select) => self.select(&select),
+            Statement::Update(update) => self.update(&update),
+            Statement::Delete(delete) => self.delete(&delete),
+            Statement::DropTable(drop) => self.drop_table(&drop),
+        }
+    }
+
+    fn create_table(&mut self, create: CreateTable) -> Result<StatementResult, Error> {
+        let schema = table_schema(create)?;
+        let name = schema.name.clone();
+        self.catalog.create_table(schema)?;
+        self.rows.insert(name, Vec::new());
+        Ok(StatementResult::CreateTable)
+    }
+
+    fn drop_table(&mut self, drop: &DropTable) -> Result<StatementResult, Error> {
+        self.catalog.drop_table(&drop.name)?;
+        self.rows.remove(&drop.name);
+        Ok(StatementResult::DropTable)
+    }
+
+    fn insert(&mut self, insert: Insert) -> Result<StatementResult, Error> {
+        let schema = self.catalog.table(&insert.table)?;
+        let targets = target_columns(schema, insert.columns)?;
+        let mut new_rows = Vec::new();
+        for exprs in &insert.values.rows {
+            if exprs.len() > targets.len() {
+                return Err(SchemaError::MoreValuesThanColumns.into());
+            }
+            if exprs.len() < targets.len() {
+                return Err(SchemaError::MoreColumnsThanValues.into());
+            }
+            let mut row = vec![Value::Null; schema.columns.len()];
+            for (expr, &index) in exprs.iter().zip(&targets) {
+                row[index] = schema.columns[index].assign(evaluate_constant(expr)?)?;
+            }
+            new_rows.push(row);
+        }
+        let rows = self
+            .rows
+            .get_mut(&insert.table)
+            .expect("every table in the catalog has its rows");
+        let count = dml::insert(schema, rows, new_rows)?;
+        Ok(StatementResult::Insert { count })
+    }
+
+    fn update(&mut self, update: &Update) -> Result<StatementResult, Error> {
+        let schema = self.catalog.table(&update.table)?;
+        let assignments = bind_assignments(schema, &update.assignments)?;
+        let filter = bind_filter(&update.filter, &schema.columns)?;
+        let rows = self
+            .rows
+            .get_mut(&update.table)
+            .expect("every table in the catalog has its rows");
+        let count = dml::update(schema, rows, &assignments, &filter)?;
+        Ok(StatementResult::Update { count })
+    }
+
+    fn delete(&mut self, delete: &Delete) -> Result<StatementResult, Error> {
+        let schema = self.catalog.table(&delete.table)?;
+        let filter = bind_filter(&delete.filter, &schema.columns)?;
+        let rows = self
+            .rows
+            .get_mut(&delete.table)
+            .expect("every table in the catalog has its rows");
+        let count = dml::delete(rows, &filter)?;
+        Ok(StatementResult::Delete { count })
+    }
+
+    fn select(&self, select: &Select) -> Result<StatementResult, Error> {
+        let schema = self.catalog.table(&select.from)?;
+        let (columns, exprs) = bind_select_items(&select.items, &schema.columns)?;
+        let filter = bind_filter(&select.filter, &schema.columns)?;
+        let sort_keys = bind_order_by(
+            &select.order_by,
+            &columns,
+            &exprs,
+            &schema.columns,
+            select.distinct,
+        )?;
+        let mut rows = Vec::new();
+        for row in &self.rows[&select.from] {
+            if !matches_filter(&filter, row)? {
+                continue;
+            }
+            let values = exprs
+                .iter()
+                .map(|expr| eval(expr, row))
+                .collect::<Result<Vec<_>, _>>()?;
+            let keys = sort_keys
+                .iter()
+                .map(|key| match &key.source {
+                    SortSource::Output(index) => Ok(values[*index].clone()),
+                    SortSource::Input(expr) => eval(expr, row),
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            rows.push(KeyedRow { values, keys });
+        }
+        if select.distinct {
+            remove_duplicates(&mut rows);
+        }
+        let orders: Vec<SortOrder> = sort_keys.iter().map(|key| key.order).collect();
+        sort(&mut rows, &orders);
+        let rows = rows
+            .into_iter()
+            .skip(select.limit.offset)
+            .take(select.limit.fetch.unwrap_or(usize::MAX))
+            .map(|row| row.values)
+            .collect();
+        Ok(StatementResult::Rows(QueryResult { columns, rows }))
+    }
+}
+
+/// `CREATE TABLE`の列の定義から，表の定義を作る．
+/// `PRIMARY KEY`の列は`NOT NULL`で，制約の名前は`表_PKEY`である．
+/// `UNIQUE`の列の制約の名前は`表_列_KEY`である．
+fn table_schema(create: CreateTable) -> Result<TableSchema, SchemaError> {
+    let mut columns = Vec::new();
+    let mut unique_constraints = Vec::new();
+    let mut has_primary_key = false;
+    for (index, column) in create.columns.into_iter().enumerate() {
+        let primary_key = column.constraints.contains(&ColumnConstraint::PrimaryKey);
+        if primary_key {
+            if has_primary_key {
+                return Err(SchemaError::MultiplePrimaryKeys { table: create.name });
+            }
+            has_primary_key = true;
+            unique_constraints.push(UniqueConstraint {
+                name: format!("{}_PKEY", create.name),
+                column: index,
+            });
+        } else if column.constraints.contains(&ColumnConstraint::Unique) {
+            unique_constraints.push(UniqueConstraint {
+                name: format!("{}_{}_KEY", create.name, column.name),
+                column: index,
+            });
+        }
+        let not_null = column.constraints.contains(&ColumnConstraint::NotNull);
+        columns.push(Column {
+            name: column.name,
+            data_type: column.data_type,
+            nullable: !primary_key && !not_null,
+        });
+    }
+    Ok(TableSchema {
+        name: create.name,
+        columns,
+        unique_constraints,
+    })
+}
+
+/// `ORDER BY`のキーの名前を解決する．
+fn bind_order_by(
+    order_by: &[OrderBy],
+    names: &[String],
+    exprs: &[BoundExpr],
+    columns: &[Column],
+    distinct: bool,
+) -> Result<Vec<SortKey>, Error> {
+    order_by
+        .iter()
+        .map(|item| {
+            Ok(SortKey {
+                source: sort_source(&item.expr, names, exprs, columns, distinct)?,
+                order: SortOrder::new(item.descending, item.nulls_first),
+            })
+        })
+        .collect()
+}
+
+/// 並べ替えのキーの値の求め方を決める．
+/// 名前だけのキーは，まず結果の列名(別名を含む)から探す．見つからなければ，表の列の式として解決する．
+/// 選択項目と同じ式なら，その結果の列の値を使う．
+/// `DISTINCT`では，結果の列にないキーで並べ替えられない．
+fn sort_source(
+    expr: &Expr,
+    names: &[String],
+    exprs: &[BoundExpr],
+    columns: &[Column],
+    distinct: bool,
+) -> Result<SortSource, Error> {
+    let output = match expr {
+        Expr::Column(name) => names.iter().position(|output| output == name),
+        _ => None,
+    };
+    if let Some(index) = output {
+        return Ok(SortSource::Output(index));
+    }
+    let bound = bind(expr, columns)?;
+    if let Some(index) = exprs.iter().position(|output| *output == bound) {
+        return Ok(SortSource::Output(index));
+    }
+    if distinct {
+        return Err(BindError::OrderByNotInSelectList.into());
+    }
+    Ok(SortSource::Input(bound))
+}
+
+/// 結果の値が同じ行を，最初の1行だけ残して除く．`NULL`どうしは同じ値とみなす．
+fn remove_duplicates(rows: &mut Vec<KeyedRow>) {
+    let mut seen: Vec<Row> = Vec::new();
+    rows.retain(|row| {
+        if seen.contains(&row.values) {
+            false
+        } else {
+            seen.push(row.values.clone());
+            true
+        }
+    });
+}
+
+/// `WHERE`の条件があれば，名前を解決する．
+fn bind_filter(filter: &Option<Expr>, columns: &[Column]) -> Result<Option<BoundExpr>, Error> {
+    match filter {
+        Some(filter) => Ok(Some(bind(filter, columns)?)),
+        None => Ok(None),
+    }
+}
+
+/// `UPDATE`の`列 = 式`の並びを，列の番号と名前を解決した式の組にする．
+/// 同じ列に2度代入すればエラーを返す．
+fn bind_assignments(
+    schema: &TableSchema,
+    assignments: &[Assignment],
+) -> Result<Vec<(usize, BoundExpr)>, Error> {
+    let mut bound = Vec::new();
+    for assignment in assignments {
+        let index = schema.column_index(&assignment.column)?;
+        if bound.iter().any(|(column, _)| *column == index) {
+            return Err(SchemaError::DuplicateAssignment {
+                column: assignment.column.clone(),
+            }
+            .into());
+        }
+        bound.push((index, bind(&assignment.value, &schema.columns)?));
+    }
+    Ok(bound)
+}
+
+/// 選択項目の名前を解決し，結果の列名と，各列を計算する式を返す．`*`はすべての列に展開する．
+fn bind_select_items(
+    items: &[SelectItem],
+    columns: &[Column],
+) -> Result<(Vec<String>, Vec<BoundExpr>), Error> {
+    let mut names = Vec::new();
+    let mut exprs = Vec::new();
+    for item in items {
+        match item {
+            SelectItem::Wildcard => {
+                names.extend(columns.iter().map(|column| column.name.clone()));
+                exprs.extend((0..columns.len()).map(BoundExpr::Column));
+            }
+            SelectItem::Expr { expr, alias } => {
+                names.push(column_name(expr, alias));
+                exprs.push(bind(expr, columns)?);
+            }
+        }
+    }
+    Ok((names, exprs))
+}
+
+/// 選択項目の結果の列名．別名があれば別名，列そのものなら列名，それ以外は`?column?`である．
+fn column_name(expr: &Expr, alias: &Option<String>) -> String {
+    match (alias, expr) {
+        (Some(alias), _) => alias.clone(),
+        (None, Expr::Column(name)) => name.clone(),
+        (None, _) => UNNAMED_COLUMN.to_string(),
+    }
+}
+
+/// `INSERT`の値を入れる列の番号を，値の順に返す．列を指定しなければ，すべての列を定義の順に返す．
+fn target_columns(schema: &TableSchema, names: Option<Vec<String>>) -> Result<Vec<usize>, Error> {
+    match names {
+        Some(names) => Ok(names
+            .iter()
+            .map(|name| schema.column_index(name))
+            .collect::<Result<Vec<_>, _>>()?),
+        None => Ok((0..schema.columns.len()).collect()),
+    }
+}
+
+/// 列を参照しない式を評価する．
+fn evaluate_constant(expr: &Expr) -> Result<Value, Error> {
+    Ok(eval(&bind(expr, &[])?, &[])?)
+}
+
+/// `VALUES`の各行の式を評価し，結果の表を作る．
+fn evaluate_values(values: &Values) -> Result<QueryResult, Error> {
+    let rows = values
+        .rows
+        .iter()
+        .map(|exprs| exprs.iter().map(evaluate_constant).collect())
+        .collect::<Result<Vec<Vec<Value>>, Error>>()?;
+    let columns = (1..=values.rows[0].len())
+        .map(|index| format!("COLUMN{index}"))
+        .collect();
+    Ok(QueryResult { columns, rows })
+}

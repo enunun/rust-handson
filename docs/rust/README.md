@@ -13,3 +13,4 @@
 | [6](iteration-06.md) | ライブラリクレートとバイナリクレート，`BufRead`と`Write`，`io::Result`，引数の`impl Trait`，書式指定，`IsTerminal`，モジュールの階層 |
 | [7](iteration-07.md) | イテレーター，`iter`/`iter_mut`/`into_iter`，クロージャ，`map`/`filter`/`position`/`any`/`collect`，`collect`と`Result`，`ok_or_else` |
 | [8](iteration-08.md) | `iter_mut`による書き換え，`retain`，借用の衝突，計算と変更の分離，`if let`，`HashSet`と`Hash`の導出，`contains`と`to_vec` |
+| [9](iteration-09.md) | `Ordering`と`then_with`，`Ord`と`PartialOrd`の実装，`sort_by`と安定な並べ替え，`skip`と`take`，`contains`による重複の検査，`unwrap_or_default` |

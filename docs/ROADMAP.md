@@ -603,7 +603,10 @@ UPDATE 0
 - `ORDER BY a DESC, b`で並べ替える．`ASC`/`DESC`と`NULLS FIRST`/`NULLS LAST`に対応する．
 - 既定では`NULL`を最大の値として扱う(`ASC`で最後，`DESC`で最初)．
 - `OFFSET n ROWS`と`FETCH FIRST n ROWS ONLY`に対応する．
-- `SELECT DISTINCT`で重複する行を除く．
+- `ORDER BY`の名前だけのキーは，結果の列名(別名を含む)を表の列名より先に探す．選択していない列でも並べ替えられる．
+- `OFFSET n ROWS`と`FETCH FIRST n ROWS ONLY`の`n`は，0以上の整数のリテラルとする．
+- `SELECT DISTINCT`で重複する行を除く．`NULL`どうしは同じ値とみなす．
+- `SELECT DISTINCT`で，選択項目にない式で並べ替えたら`42P10`とする．
 
 ### 使用例
 
@@ -628,7 +631,7 @@ ferrodb> SELECT name FROM users ORDER BY name DESC OFFSET 1 ROWS FETCH FIRST 2 R
 
 ### 既存テストへの影響
 
-なし．
+- 構文解析のテストの`Select`の期待値に，`distinct`，`order_by`，`limit`が加わる．
 
 ## Iteration 10：実行計画とEXPLAIN
 

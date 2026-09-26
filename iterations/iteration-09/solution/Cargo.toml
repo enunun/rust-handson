@@ -1,0 +1,10 @@
+[package]
+name = "ferrodb-09-solution"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "ferrodb"
+
+[dependencies]
+winnow = "1.0.4"
