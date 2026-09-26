@@ -64,3 +64,4 @@ Dev Containersを使わない場合は，次を用意する．
 | [7](iterations/iteration-07/exercise/README.md) | `WHERE`，列の選択，別名 |
 | [8](iterations/iteration-08/exercise/README.md) | `UPDATE`，`DELETE`，`DROP TABLE`，制約 |
 | [9](iterations/iteration-09/exercise/README.md) | `ORDER BY`，`OFFSET`，`FETCH FIRST`，`DISTINCT` |
+| [10](iterations/iteration-10/exercise/README.md) | 実行計画と`EXPLAIN` |

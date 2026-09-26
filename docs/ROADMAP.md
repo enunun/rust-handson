@@ -638,14 +638,15 @@ ferrodb> SELECT name FROM users ORDER BY name DESC OFFSET 1 ROWS FETCH FIRST 2 R
 ### 要件
 
 - `SELECT`を，実行計画(演算子の木)に変換してから実行する．結果は変えない．
-- `EXPLAIN SELECT ...`で実行計画を表示する．
+- `EXPLAIN SELECT ...`で実行計画を表示する．演算子を1行に1つ，子を親より2文字深く字下げして書く．`EXPLAIN`は演算子を動かさない．
+- 結果の列にない式で並べ替えるときは，その式を`Project`の隠れた列として計算し，最上段の`Project`で取り除く．
 
 ### 使用例
 
 ```console
 ferrodb> EXPLAIN SELECT name FROM users WHERE id > 1 ORDER BY name;
-      QUERY PLAN
-----------------------
+     QUERY PLAN
+---------------------
  Sort [NAME]
    Project [NAME]
      Filter (ID > 1)
@@ -655,8 +656,11 @@ ferrodb> EXPLAIN SELECT name FROM users WHERE id > 1 ORDER BY name;
 
 ### モジュール
 
+- `plan::binder`：`fn bind_select(select: &Select, schema: &TableSchema) -> Result<BoundSelect, BindError>`
 - `plan::planner`：`fn plan(select: &BoundSelect) -> PlanNode`
-- `exec`：`trait Executor { fn next(&mut self) -> Result<Option<Row>, Error>; }`と，`SeqScan`，`Filter`，`Project`，`Sort`，`Distinct`，`Limit`
+- `plan::explain`：`fn explain(plan: &PlanNode) -> Vec<String>`
+- `exec`：`trait Executor { fn next(&mut self) -> Result<Option<Row>, Error>; }`と，演算子ごとのモジュールの`SeqScan`，`Filter`，`Project`，`Sort`，`Distinct`，`Limit`
+- `exec::build`：実行計画から`Box<dyn Executor>`の木を作る．
 
 ### リファクタリング
 
@@ -664,7 +668,7 @@ Iteration 7〜9で1つの関数に書いた`SELECT`の処理を，演算子ご�
 
 ### 設計ドキュメントの更新
 
-- `c4-component.md`：`plan::planner`と`exec`の演算子を加える．
+- `c4-component.md`：`plan::planner`，`plan::explain`と`exec`の演算子を加える．
 - `code-types.md`：`PlanNode`，`Executor`とその実装を加える．
 - `code-sequence.md`：各演算子が`next`で1行ずつ親の演算子へ渡す流れにする．
 
