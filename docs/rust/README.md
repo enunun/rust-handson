@@ -16,3 +16,4 @@
 | [9](iteration-09.md) | `Ordering`と`then_with`，`Ord`と`PartialOrd`の実装，`sort_by`と安定な並べ替え，`skip`と`take`，`contains`による重複の検査，`unwrap_or_default` |
 | [10](iteration-10.md) | トレイトの定義と実装，トレイトオブジェクトと`Box<dyn Trait>`，静的ディスパッチと動的ディスパッチ，`while let`，`let ... else`，イテレーターを構造体に持つ |
 | [11](iteration-11.md) | トレイトオブジェクトを組み合わせる構造体，`Option::take`と`replace`，スライスのパターン，`fold`と`reduce`，`self`を受け取るメソッド，`extend_from_slice`と`repeat_n`，`as_ref`，`unreachable!` |
+| [12](iteration-12.md) | `HashMap`のキーになる条件と`Hash`と`Eq`の実装，タプル構造体，`entry` API，トレイトオブジェクトを作って返す関数，`ok_or`，使わない引数 |

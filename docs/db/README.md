@@ -16,3 +16,4 @@
 | [9](iteration-09.md) | `SELECT`の処理の順序，`ORDER BY`と名前の解決，`NULL`の並び順，`OFFSET`と`FETCH FIRST`，`DISTINCT` |
 | [10](iteration-10.md) | 問い合わせの処理の段階，論理計画と物理計画，Volcanoモデル，パイプラインとブロッキング演算子，`EXPLAIN` |
 | [11](iteration-11.md) | 直積，内部結合，外部結合と`ON`と`WHERE`の違い，表の別名と修飾した列名，入れ子ループ結合 |
+| [12](iteration-12.md) | 集約関数と`NULL`，`GROUP BY`，集約する問い合わせで使える式，`HAVING`と処理の順序，ハッシュ集約 |

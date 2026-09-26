@@ -733,12 +733,18 @@ ferrodb> SELECT e.name, d.title FROM emp e LEFT JOIN dept d ON e.dept = d.code;
 - `GROUP BY`と`HAVING`を扱う．`GROUP BY`がなく集約関数だけがある場合は，全体で1つのグループとする．
 - 集約関数は`NULL`を無視する．空の集合の`COUNT`は`0`，それ以外は`NULL`とする．
 - `AVG`は整数の平均を0の方向に切り捨てた`BIGINT`とする．
-- `GROUP BY`にない列を集約せずに選んだら`42803`とする．
+- `COUNT`は`BIGINT`，`SUM`は整数の合計を`BIGINT`，`MIN`と`MAX`は引数と同じ型で返す．`SUM`と`AVG`の引数が整数でなければ`42883`とする．
+- `GROUP BY`にない列を集約せずに選んだら`42803`とする．`WHERE`などの集約関数と，入れ子の集約関数も`42803`とする．
+- グループは，最初に現れた順で返す．`GROUP BY`のキーの`NULL`どうしは同じグループにする．
 
 ### 使用例
 
 ```console
 ferrodb> SELECT dept, COUNT(*) AS n, SUM(salary) AS total FROM emp GROUP BY dept HAVING COUNT(*) > 1;
+ DEPT | N | TOTAL
+------+---+-------
+ dev  | 2 |   950
+(1 row)
 ```
 
 ### モジュール
@@ -757,7 +763,8 @@ ferrodb> SELECT dept, COUNT(*) AS n, SUM(salary) AS total FROM emp GROUP BY dept
 
 ### 既存テストへの影響
 
-なし．
+- 構文解析のテストの`Select`の期待値に，`group_by`と`having`が加わる．
+- `Filter::new`が，条件を書いた句の名前(`WHERE`か`HAVING`)を受け取る．
 
 ## Iteration 13：ページとタプルのバイト表現
 
