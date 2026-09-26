@@ -772,7 +772,7 @@ ferrodb> SELECT dept, COUNT(*) AS n, SUM(salary) AS total FROM emp GROUP BY dept
 
 - 行(タプル)をバイト列に符号化し，元に戻せる．`NULL`はビットマップで表す．
 - 8192バイトのスロット付きページに，タプルを追加，取得，削除，更新できる．
-- ページに入らないタプルは，エラーを返す．
+- ページに入らないタプルは，エラーを返す．SQLでは`54000`とする．
 - この時点では，表のデータはメモリ上のページの列に置く．SQLとしての振る舞いは変えない．
 
 ### 使用例
@@ -787,16 +787,18 @@ assert_eq!(decode_tuple(page.get(slot).unwrap(), &schema)?, row);
 
 - `storage::tuple`：`fn encode_tuple(row: &[Value], schema: &TableSchema) -> Vec<u8>`，`fn decode_tuple(...)`
 - `storage::page`：`struct Page`，`SlotId`
+- `storage::heap`：表のタプルを置くページの列`struct HeapFile`と，行の位置`RowId`．Iteration 14でファイルに保存する．
 
 ### リファクタリング
 
-表の行を`Vec<Row>`からページの列に置き換える．
+表の行を`Vec<Row>`からページの列(`HeapFile`)に置き換える．`UPDATE`と`DELETE`は，行の位置(`RowId`)のタプルを書き換える．
 
 ### 設計ドキュメントの更新
 
 - `layout.md`：新たに作り，ページとタプルのバイト配置をpacket図で描く．
-- `c4-component.md`：`storage`を加える．
-- `code-types.md`：`Page`，`SlotId`，`RowId`を加える．
+- `c4-component.md`：`storage::page`，`storage::tuple`，`storage::heap`を加える．
+- `code-types.md`：`Page`，`SlotId`，`RowId`，`HeapFile`を加える．
+- `code-sequence.md`：`UPDATE`がページのタプルを書き換える流れにする．
 
 ### 学ぶこと
 
@@ -805,7 +807,7 @@ assert_eq!(decode_tuple(page.get(slot).unwrap(), &schema)?, row);
 
 ### 既存テストへの影響
 
-なし．
+- `exec::dml`の単体テストで，表の行を`Vec<Row>`でなく`HeapFile`で渡す．
 
 ## Iteration 14：ヒープファイルとデータディレクトリ
 
@@ -834,7 +836,7 @@ ferrodb> SELECT * FROM t;
 ### モジュール
 
 - `storage::disk`：`trait DiskManager`と，ファイル用とメモリ用の実装
-- `storage::heap`：`struct HeapFile`
+- `storage::heap`：`HeapFile`のページを`DiskManager`で読み書きする．
 - `catalog`：カタログの保存と読み込み
 - `database`：`Database::open(dir: &Path)`を加える．
 - `src/main.rs`：`clap`によるサブコマンド`repl`
@@ -842,7 +844,7 @@ ferrodb> SELECT * FROM t;
 ### 設計ドキュメントの更新
 
 - `c4-container.md`：データディレクトリ(カタログ，ヒープファイル)を加える．
-- `c4-component.md`：`storage::disk`，`storage::heap`を加える．
+- `c4-component.md`：`storage::disk`と，`storage::heap`から`storage::disk`への依存を加える．
 - `layout.md`：ヒープファイルとカタログファイルの配置を加える．
 - `code-sequence.md`：起動時にカタログを読み込む流れを加える．
 
