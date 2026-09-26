@@ -1,0 +1,27 @@
+{
+  "name": "workspaces",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:text": "git ls-files '*.md' -z | xargs -0 -r textlint",
+    "lint:markdown": "git ls-files '*.md' -z | xargs -0 -r markdownlint-cli2",
+    "lint": "pnpm run lint:text && pnpm run lint:markdown"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@textlint-ja/textlint-rule-preset-ai-writing": "^1.7.0",
+    "markdownlint-cli2": "^0.23.3",
+    "textlint": "^15.8.0",
+    "textlint-filter-rule-comments": "^1.3.0",
+    "textlint-plugin-mdx": "^1.1.0",
+    "textlint-rule-ja-space-around-code": "^3.0.3",
+    "textlint-rule-ja-space-between-half-and-full-width": "^3.0.3",
+    "textlint-rule-preset-ja-spacing": "^3.0.3",
+    "textlint-rule-preset-ja-technical-writing": "^12.0.2",
+    "textlint-rule-prh": "^6.1.0"
+  }
+}

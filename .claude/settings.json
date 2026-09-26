@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "system-development-skills@system-development-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "system-development-skills": {
+      "source": {
+        "source": "github",
+        "repo": "enunun/system-development-skills"
+      }
+    }
+  }
+}

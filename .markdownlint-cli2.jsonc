@@ -1,0 +1,13 @@
+{
+	"config": {
+		"default": true
+	},
+	"globs": [
+		"**/*.md"
+	],
+	"ignores": [
+		"**/node_modules/**",
+		"CLAUDE.md",
+		"**/.claude/**"
+	]
+}

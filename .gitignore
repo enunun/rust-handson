@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------
+# Dev container state (bind-mounted into the container at runtime)
+# Created by "initializeCommand" in .devcontainer/devcontainer.json,
+# so they are safe to ignore: they get recreated automatically.
+# ---------------------------------------------------------------
+
+# Claude Code home (/root/.claude): credentials, sessions, transcripts,
+# caches, backups, plugins, memory
+.devcontainer/claude-home/
+
+# RTK home (/root/.config/rtk, /root/.local/share/rtk): user config,
+# history DB, telemetry state, device salt
+.devcontainer/rtk-home/
+
+# ---------------------------------------------------------------
+# Claude Code (project-level)
+# Shared files such as CLAUDE.md, .claude/settings.json, .claude/agents/
+# and .claude/skills/ stay tracked; only personal/local files are ignored.
+# ---------------------------------------------------------------
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
+# ---------------------------------------------------------------
+# RTK (project-level)
+# .rtk/filters.toml is meant to be committed; ignore only local output.
+# ---------------------------------------------------------------
+.rtk/*
+!.rtk/filters.toml
+
+# ---------------------------------------------------------------
+# mise (per-user config overrides)
+# ---------------------------------------------------------------
+mise.local.toml
+.mise.local.toml
+
+# ---------------------------------------------------------------
+# lefthook (local overrides)
+# ---------------------------------------------------------------
+lefthook-local.yml
+
+# ---------------------------------------------------------------
+# Secrets / environment
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+.credentials.json
+
+# ---------------------------------------------------------------
+# OS / editor / misc
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+tmp/
+
+# node
+node_modules/
+# 実際に使用する場合には、pnpm-lock.yamlをコミットすることが推奨される
+pnpm-lock.yaml

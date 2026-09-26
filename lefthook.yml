@@ -1,0 +1,16 @@
+# コミット時に，ステージしたファイルを検査する．
+# CIは，同じ設定のツールをリポジトリ全体に対して実行する(mise run check)．
+pre-commit:
+  parallel: true
+  skip:
+    - merge
+    - rebase
+
+  commands:
+    textlint:
+      glob: "*.md"
+      run: pnpm textlint {staged_files}
+
+    markdownlint:
+      glob: "*.md"
+      run: pnpm markdownlint-cli2 {staged_files}
