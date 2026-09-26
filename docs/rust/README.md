@@ -12,3 +12,4 @@
 | [5](iteration-05.md) | `HashMap`，`#[derive(Default)]`，構造体が値を所有する，`Option`で省略を表す，`match`のガードと`matches!`，`enumerate`と`zip`，スライスと`vec!`，`expect` |
 | [6](iteration-06.md) | ライブラリクレートとバイナリクレート，`BufRead`と`Write`，`io::Result`，引数の`impl Trait`，書式指定，`IsTerminal`，モジュールの階層 |
 | [7](iteration-07.md) | イテレーター，`iter`/`iter_mut`/`into_iter`，クロージャ，`map`/`filter`/`position`/`any`/`collect`，`collect`と`Result`，`ok_or_else` |
+| [8](iteration-08.md) | `iter_mut`による書き換え，`retain`，借用の衝突，計算と変更の分離，`if let`，`HashSet`と`Hash`の導出，`contains`と`to_vec` |

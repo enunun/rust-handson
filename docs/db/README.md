@@ -12,3 +12,4 @@
 | [5](iteration-05.md) | 表とスキーマ，カタログ，識別子，データ型，代入の規則，文の原子性 |
 | [6](iteration-06.md) | 対話的なクライアント，文の区切り，結果集合とコマンドタグ，結果の表示 |
 | [7](iteration-07.md) | `SELECT`の処理の順序，名前解決，`WHERE`と3値論理，選択項目と列名 |
+| [8](iteration-08.md) | `UPDATE`と`DELETE`，整合性制約(`NOT NULL`，`UNIQUE`，`PRIMARY KEY`)，制約の名前，文単位の原子性，制約を検査する時点 |

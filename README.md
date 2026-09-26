@@ -62,3 +62,4 @@ Dev Containersを使わない場合は，次を用意する．
 | [5](iterations/iteration-05/exercise/README.md) | `CREATE TABLE`，`INSERT`，`SELECT * FROM` |
 | [6](iterations/iteration-06/exercise/README.md) | REPL |
 | [7](iterations/iteration-07/exercise/README.md) | `WHERE`，列の選択，別名 |
+| [8](iterations/iteration-08/exercise/README.md) | `UPDATE`，`DELETE`，`DROP TABLE`，制約 |

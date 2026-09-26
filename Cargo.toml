@@ -13,4 +13,5 @@ exclude = [
   "iterations/iteration-05/exercise",
   "iterations/iteration-06/exercise",
   "iterations/iteration-07/exercise",
+  "iterations/iteration-08/exercise",
 ]
