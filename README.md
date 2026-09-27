@@ -74,3 +74,4 @@ Dev Containersを使わない場合は，次を用意する．
 | [17](iterations/iteration-17/exercise/README.md) | インデックスの利用 |
 | [18](iterations/iteration-18/exercise/README.md) | トランザクションとMVCC |
 | [19](iterations/iteration-19/exercise/README.md) | WALとクラッシュリカバリ |
+| [20](iterations/iteration-20/exercise/README.md) | PostgreSQL互換プロトコル |

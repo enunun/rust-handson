@@ -41,7 +41,7 @@ ferro=> EXPLAIN SELECT name FROM emp WHERE salary >= 450;
                       QUERY PLAN
 ------------------------------------------------------
  Project [EMP.NAME]
-   IndexScan EMP_SALARY on EMP (EMP.SALARY >= 450)
+   IndexScan EMP USING EMP_SALARY (EMP.SALARY >= 450)
 (2 rows)
 ```
 
@@ -1128,7 +1128,7 @@ ferrodb> SELECT * FROM t;
 
 ### 要件
 
-- サブコマンド`serve`の`--data-dir DIR --port N`で，TCPの接続を1つずつ受け付ける．
+- サブコマンド`serve`の`--data-dir DIR --port N`で，TCPの接続を1つずつ受け付ける．`--port`を省略すると5433を使う．
 - PostgreSQLのフロントエンド/バックエンドプロトコル3.0の，起動，認証(常に成功)，Simple Query，終了を実装する．SSLの要求には`N`を返す．
 - 問い合わせの結果を`RowDescription`，`DataRow`，`CommandComplete`で返す．値はテキスト形式で返す．
 - エラーは`ErrorResponse`でSQLSTATEと位置を返す．
@@ -1148,6 +1148,7 @@ ferro=> SELECT * FROM t;
 
 - `server::message`：`enum FrontendMessage`，`enum BackendMessage`と，その読み書き
 - `server::connection`：`fn handle<S: Read + Write>(stream: S, db: &mut Database) -> Result<(), ProtocolError>`
+- `server`：`connection`と`message`をまとめる公開のモジュール
 - `src/main.rs`：サブコマンド`serve`
 
 ### 設計ドキュメントの更新
@@ -1156,11 +1157,12 @@ ferro=> SELECT * FROM t;
 - `c4-container.md`：サーバーのプロセスとTCPの接続を加える．
 - `c4-component.md`：`server`を加える．
 - `layout.md`：メッセージの配置を加える．
+- `code-types.md`：メッセージの型を加える．
 - `code-sequence.md`：起動からSimple Queryまでのメッセージのやりとりを加える．
 
 ### 学ぶこと
 
-- Rust：`std::net::TcpListener`，`Read`と`Write`をトレイト境界にしたジェネリクス，`Cursor`によるテスト，`to_be_bytes`
+- Rust：`std::net::TcpListener`，`Read`と`Write`をトレイト境界にしたジェネリクス，`Cursor`によるテスト，`to_be_bytes`，テストでサーバーを動かす`thread::spawn`
 - データベース：フロントエンド/バックエンドプロトコル，型OID，テキスト形式
 
 ### 既存テストへの影響
