@@ -868,10 +868,11 @@ ferrodb> SELECT * FROM t;
 
 ### 要件
 
-- ページをバッファプール経由で読み書きする．プールの枠数は起動時に決める．
+- ページをバッファプール経由で読み書きする．枠の数はプールを作るときに決める．ヒープファイルは，ファイルごとに16枠のプールを持つ．
 - 使われているページ(ピン留めされたページ)は追い出さない．
 - 枠が足りなければ，クロック方式で追い出すページを選ぶ．変更されたページは書き戻してから追い出す．
 - すべての枠がピン留めされていたら，エラーを返す．
+- プールを捨てるとき(データベースを閉じるとき)に，変更されたページを書き戻す．
 
 ### 使用例
 
@@ -884,11 +885,13 @@ drop(guard);                               // ピンを外す
 
 ### モジュール
 
-- `storage::buffer`：`struct BufferPool<D: DiskManager>`，`struct PageGuard<'a>`，`struct ClockReplacer`
+- `storage::buffer`：`struct BufferPool<D: DiskManager>`，`struct PageGuard<'a>`，`struct ClockReplacer`，`enum BufferError`
+- `storage::disk`：`Box<dyn DiskManager>`に`DiskManager`を実装する．
+- `storage::heap`：`HeapFile`が`BufferPool`を通してページを読み書きする．
 
 ### 設計ドキュメントの更新
 
-- `c4-component.md`：`storage::buffer`を加え，`heap`の依存先を`disk`から`buffer`に変える．
+- `c4-component.md`：`storage::buffer`を加え，`heap`がページを`buffer`で読み書きするようにする．
 - `code-types.md`：`BufferPool`，`PageGuard`，`ClockReplacer`を加える．
 - `code-sequence.md`：ページの取得，ピン留め，追い出しの流れを加える．
 
@@ -899,7 +902,8 @@ drop(guard);                               // ピンを外す
 
 ### 既存テストへの影響
 
-なし．
+- `storage::heap`の単体テストは，ページの数を`BufferPool`から読む．
+- `HeapError::Io`は`HeapError::Buffer`になる．
 
 ## Iteration 16：B+木
 
