@@ -26,3 +26,4 @@
 | [19](iteration-19.md) | `Write`を型引数にする，`BufWriter`，`flush`と`sync_data`，型引数を決めた`impl`，`Rc<RefCell<T>>`による共有，`if let`をつなぐ条件，`crc32fast`，子プロセスを強制終了させるテスト |
 | [20](iteration-20.md) | `TcpListener`と`TcpStream`，`Read + Write`の型引数，`Cursor`と自分の型への`Read`と`Write`の実装，`from_be_bytes`と`split_at_checked`，`concat`と`char::from`，小さな書き込みをまとめる，`clap`の既定値，テストの`thread::spawn`，`postgres`クレート，`cargo run --release` |
 | [21](iteration-21.md) | スレッドと`move`クロージャ，`Arc`，`Mutex`とガード，毒された`Mutex`，`RwLock`，ガードを持つ期間とラッチの順序，`Send`と`Sync`，スーパートレイトの`Send`，`thread::scope` |
+| [22](iteration-22.md) | `Duration`と`thread::sleep`，`Condvar`と`wait_while`，知らせを逃さない待ち方，`wait_timeout_while`，`Barrier`，`is_finished`，構造体の更新構文，`get_or_insert_with` |

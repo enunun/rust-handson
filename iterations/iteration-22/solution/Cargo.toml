@@ -1,0 +1,16 @@
+[package]
+name = "ferrodb-22-solution"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "ferrodb"
+
+[dependencies]
+clap = { version = "4.6.7", features = ["derive"] }
+crc32fast = "1.5.2"
+winnow = "1.0.4"
+
+[dev-dependencies]
+postgres = "0.19.14"
+tempfile = "3.27.0"

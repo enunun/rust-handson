@@ -76,3 +76,4 @@ Dev Containersを使わない場合は，次を用意する．
 | [19](iterations/iteration-19/exercise/README.md) | WALとクラッシュリカバリ |
 | [20](iterations/iteration-20/exercise/README.md) | PostgreSQL互換プロトコル |
 | [21](iterations/iteration-21/exercise/README.md) | 複数の同時接続 |
+| [22](iterations/iteration-22/exercise/README.md) | 分離レベルと書き込みの競合 |

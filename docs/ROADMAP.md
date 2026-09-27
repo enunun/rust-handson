@@ -1228,6 +1228,7 @@ ferro=> SELECT COUNT(*) FROM t;   -- 3はまだ見えない
 - 別のトランザクションが更新中の行を更新しようとしたら，そのトランザクションの終了を待つ．
   - 相手がコミットしたら，`REPEATABLE READ`では`40001`とする．`READ COMMITTED`では最新の版に対して条件を評価し直して更新する．
   - 相手が中止したら，そのまま更新する．
+- 待つ時間には上限(既定は60秒)を設け，超えたら`55P03`とする．
 - `SERIALIZABLE`は`0A000`とする．
 
 ### 使用例
@@ -1236,11 +1237,15 @@ ferro=> SELECT COUNT(*) FROM t;   -- 3はまだ見えない
 
 ### モジュール
 
-- `txn`：行の更新待ち(`Condvar`)と分離レベル
+- `txn`：分離レベル`Isolation`，`Transaction::snapshot`，書き換えの衝突を調べる`write_conflict`，トランザクションの終わりを待つ`EndSignal`(`Condvar`)
+- `sql::ast`，`sql::parser`：`Statement::StartTransaction(IsolationLevel)`
+- `exec::dml`：`update`と`delete`は，衝突があれば何も変えずに`Outcome::WaitFor`を返す．
+- `database`：ラッチを外して待ち，文をやり直す．`Database::with_lock_timeout`
 
 ### 設計ドキュメントの更新
 
 - `code-types.md`：`IsolationLevel`と待ち合わせの構造体を加える．
+- `c4-component.md`：`database`と`exec::dml`から`txn`への依存の説明を直す．
 - `code-sequence.md`：更新の競合で待ち，エラーにする流れを加える．
 
 ### 学ぶこと
@@ -1250,4 +1255,4 @@ ferro=> SELECT COUNT(*) FROM t;   -- 3はまだ見えない
 
 ### 既存テストへの影響
 
-なし．
+`START TRANSACTION`を構文解析するテストの期待値が`Statement::StartTransaction(IsolationLevel::ReadCommitted)`に変わる．`exec::dml`の`update`と`delete`を呼ぶ単体テストは，`Outcome::Done`から行の数を取り出す．
