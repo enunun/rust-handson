@@ -111,6 +111,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 
 [[package]]
+name = "crc32fast"
+version = "1.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01a7799fd6b852db0e61728dde9a204c423b44d689dbd432522543614b490e78"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "errno"
 version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -265,6 +274,16 @@ name = "ferrodb-18-solution"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "tempfile",
+ "winnow",
+]
+
+[[package]]
+name = "ferrodb-19-solution"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "crc32fast",
  "tempfile",
  "winnow",
 ]

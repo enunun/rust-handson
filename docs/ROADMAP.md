@@ -1076,6 +1076,9 @@ ferrodb> SELECT COUNT(*) FROM emp;
 - 起動時にWALを読み，最後のチェックポイントからREDOする．コミットの記録がないトランザクションは中止扱いにする．
 - WALのレコードにチェックサムを付け，壊れた末尾のレコードは読み捨てる．
 - `CHECKPOINT`文で，変更されたページを書き戻してチェックポイントを記録する．
+- ページの変更は，書き換えたあとのページの内容を丸ごと記録する(`PageImage`)．同じレコードを何度やり直しても，ページは同じ内容になる．
+- データベースを開くときは，リカバリしてからチェックポイントを取る．表とインデックスを作る文と消す文のあとにも，チェックポイントを取る．
+- トランザクションの状態のファイル`xact`は，チェックポイントで書く．チェックポイントのあとの状態の変化は，ログの`Begin`，`Commit`，`Abort`からやり直す．
 
 ### 使用例
 
@@ -1096,24 +1099,26 @@ ferrodb> SELECT * FROM t;
 ### モジュール
 
 - `wal`：`enum WalRecord`，`struct Lsn`，`struct WalWriter<W: Write>`，`fn recover(...)`
-- `storage::page`：ページヘッダーに`page_lsn`を加える．
-- `storage::buffer`：書き戻しの前にWALを書き込む．
+- `storage::buffer`：書き換えたページをログに記録し，枠に`page_lsn`を持つ．書き戻しの前に，`page_lsn`までのログをディスクに届ける．
+- `storage::disk`：書いたページをディスクに届ける`sync`
+- `database`：開くときのリカバリ，コミットの記録，チェックポイント
+- `sql::parser`：`CHECKPOINT`
 
 ### 設計ドキュメントの更新
 
 - `c4-container.md`：WALファイルを加える．
 - `c4-component.md`：`wal`を加える．
-- `layout.md`：WALレコードの配置と，ページヘッダーの`page_lsn`を加える．
+- `layout.md`：WALレコードの配置を加える．
 - `code-sequence.md`：コミットとリカバリの流れを加える．
 
 ### 学ぶこと
 
-- Rust：`Write`トレイトとジェネリクス，`BufWriter`，`File::sync_data`，テストのバイナリを子プロセスとして起動して強制終了させるテスト
+- Rust：`Write`トレイトとジェネリクス，`BufWriter`，`File::sync_data`，テストのバイナリを子プロセスとして起動して強制終了させるテスト，`Rc<RefCell<T>>`による共有，型引数を決めた`impl`，`if let`をつなぐ条件
 - データベース：WALの規則，REDO，チェックポイント，MVCCでUNDOが要らない理由
 
 ### 既存テストへの影響
 
-なし．
+- データディレクトリに`wal`が加わる．
 
 ### 受講者が行うツール操作
 
