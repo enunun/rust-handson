@@ -25,3 +25,4 @@
 | [18](iteration-18.md) | ニュータイプと関連定数，`Copy`と`Clone`，`self`を受け取って値を消費するメソッド，`std::mem::take`と`#[default]`，`map_err`と`and_then`，値を捕まえるクロージャを渡す |
 | [19](iteration-19.md) | `Write`を型引数にする，`BufWriter`，`flush`と`sync_data`，型引数を決めた`impl`，`Rc<RefCell<T>>`による共有，`if let`をつなぐ条件，`crc32fast`，子プロセスを強制終了させるテスト |
 | [20](iteration-20.md) | `TcpListener`と`TcpStream`，`Read + Write`の型引数，`Cursor`と自分の型への`Read`と`Write`の実装，`from_be_bytes`と`split_at_checked`，`concat`と`char::from`，小さな書き込みをまとめる，`clap`の既定値，テストの`thread::spawn`，`postgres`クレート，`cargo run --release` |
+| [21](iteration-21.md) | スレッドと`move`クロージャ，`Arc`，`Mutex`とガード，毒された`Mutex`，`RwLock`，ガードを持つ期間とラッチの順序，`Send`と`Sync`，スーパートレイトの`Send`，`thread::scope` |

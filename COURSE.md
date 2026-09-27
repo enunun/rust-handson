@@ -184,3 +184,6 @@ iterations/iteration-00/exercise/
 - Mermaidの`sequenceDiagram`では，メッセージの文字列の中の`;`が行の区切りになり，構文エラーになる．`#59;`と書く．
 - サーバーがTCPに小さなメッセージを1つずつ書くと，Nagleのアルゴリズムと遅延確認応答のため，`psql`の問い合わせのたびに約45ミリ秒遅れる．1つの問い合わせに返すメッセージは`Vec<u8>`に並べてから1回で書く．
 - 教材の出力を取るためにサーバーを背景で起動したときは，`pkill -f`でなくプロセスの番号で止める．`pkill -f`のパターンは，それを実行したシェルのコマンド行にも一致して，シェルごと止める．
+- `RwLockReadGuard`などのガードは`#[must_use]`で，`let _ = pool.fetch_page(0).unwrap().read();`は`let_underscore_lock`のエラーになる．すぐに捨てるガードは`drop(...)`に渡す．
+- `postgres`の`Client`は`Debug`を実装しないので，`Client::connect(...)`の結果に`unwrap_err`を使えない．`let Err(error) = ... else { panic!(...) };`で取り出す．
+- `RwLock`の読み取りのガードを同じスレッドで2回取ると，間にほかのスレッドの書き込みが待っていればデッドロックすることがある．`ferrodb`は，文ごとに`TransactionManager`のガードを1回だけ取り，参照を渡す．

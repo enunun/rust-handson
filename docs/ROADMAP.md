@@ -1197,6 +1197,7 @@ ferro=> SELECT COUNT(*) FROM t;   -- 3はまだ見えない
 
 - `database`：`Database`を`Arc`で共有し，`Session`を接続ごとに作る．
 - `storage::buffer`：ページごとの読み書きラッチ
+- `server::connection`：`fn serve(listener: TcpListener, database: Arc<Database>)`．接続ごとにスレッドを作り，`handle(stream, Arc<Database>)`で扱う．
 
 ### リファクタリング
 
@@ -1206,6 +1207,7 @@ ferro=> SELECT COUNT(*) FROM t;   -- 3はまだ見えない
 
 - `c4-container.md`：接続ごとのスレッドを加える．
 - `code-types.md`：`Session`と，共有する構造体のロックを加える．
+- `c4-component.md`：`database`，`server::connection`，`repl`の依存の説明を直す．
 - `code-sequence.md`：2つのセッションが並行に動く流れを加える．
 
 ### 学ぶこと
@@ -1215,7 +1217,7 @@ ferro=> SELECT COUNT(*) FROM t;   -- 3はまだ見えない
 
 ### 既存テストへの影響
 
-`Database::execute`を呼ぶテストが`Session::execute`に変わる．
+`Database::execute`を呼ぶテストが`Session::execute`に変わる．`handle`に`&mut Database`を渡していたテストは，`Arc<Database>`を渡す．
 
 ## Iteration 22：分離レベルと書き込みの競合
 
