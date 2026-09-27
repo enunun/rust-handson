@@ -913,6 +913,9 @@ drop(guard);                               // ピンを外す
 - 挿入，完全一致の検索，範囲の走査，削除を行える．
 - 葉と内部ノードは，いっぱいになったら分割する．削除では併合しない．
 - キーは`INTEGER`，`BIGINT`，`BOOLEAN`，`VARCHAR`とし，バイト列の比較で順序が保たれるように符号化する．
+- 同じキーを複数の行に使える．項目はキーと行の位置の組で並べる．
+- 符号化したキーが2000バイトを超えたらエラーにする．
+- ページ0に根のページ番号を書き，木の状態をすべてページに置く．
 
 ### 使用例
 
@@ -920,13 +923,15 @@ drop(guard);                               // ピンを外す
 let mut tree = BTree::<i32>::create(&pool)?;
 tree.insert(42, row_id)?;
 assert_eq!(tree.get(&42)?, Some(row_id));
-let ids: Vec<RowId> = tree.range(10..50)?.collect::<Result<_, _>>()?;
+let entries: Vec<(i32, RowId)> = tree.range(10..50)?.collect::<Result<_, _>>()?;
 ```
 
 ### モジュール
 
 - `index::key`：`trait IndexKey`(順序を保つ符号化と復号)
-- `index::btree`：`struct BTree<K: IndexKey>`，`struct RangeIter<'a, K>`
+- `index::btree`：`struct BTree<'a, K: IndexKey>`，`struct RangeIter<'a, K>`，`enum BTreeError`
+- `storage::heap`：`RowId`に順序を導出する．
+- `lib.rs`：`index`と`storage`をクレートの外に公開する．
 
 ### 設計ドキュメントの更新
 
@@ -937,7 +942,7 @@ let ids: Vec<RowId> = tree.range(10..50)?.collect::<Result<_, _>>()?;
 
 ### 学ぶこと
 
-- Rust：トレイト境界と関連関数，ジェネリックな構造体，`Iterator`の実装，`RangeBounds`
+- Rust：トレイト境界と関連関数，ジェネリックな構造体，`Iterator`の実装，`RangeBounds`，`PhantomData`
 - データベース：B+木，ノードの分割，順序を保つキーの符号化
 
 ### 既存テストへの影響
