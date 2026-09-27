@@ -814,7 +814,7 @@ assert_eq!(decode_tuple(page.get(slot).unwrap(), &schema)?, row);
 ### 要件
 
 - サブコマンド`repl`のオプション`--data-dir DIR`で，表をデータディレクトリのファイルに保存する．起動し直しても表と行が残る．
-- カタログと，表ごとのヒープファイルを保存する．
+- カタログと，表ごとのヒープファイルを保存する．ヒープファイルの名前は，表の名前のUTF-8のバイトの16進数とする．
 - `--data-dir`を省略したら，これまでどおりメモリ上で動かす．
 
 ### 使用例
@@ -839,6 +839,7 @@ ferrodb> SELECT * FROM t;
 - `storage::heap`：`HeapFile`のページを`DiskManager`で読み書きする．
 - `catalog`：カタログの保存と読み込み
 - `database`：`Database::open(dir: &Path)`を加える．
+- `repl`：データベースを受け取る`run_with`
 - `src/main.rs`：`clap`によるサブコマンド`repl`
 
 ### 設計ドキュメントの更新
@@ -855,7 +856,7 @@ ferrodb> SELECT * FROM t;
 
 ### 既存テストへの影響
 
-なし．
+- `HeapFile::new`が`Box<dyn DiskManager>`を受け取り，`HeapFile`の操作が`Result`を返す．`storage::heap`と`exec::dml`の単体テストが変わる．
 
 ### 受講者が行うツール操作
 

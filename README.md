@@ -68,3 +68,4 @@ Dev Containersを使わない場合は，次を用意する．
 | [11](iterations/iteration-11/exercise/README.md) | 結合(`CROSS`，`INNER`，`LEFT JOIN`) |
 | [12](iterations/iteration-12/exercise/README.md) | 集約(`GROUP BY`，`HAVING`，集約関数) |
 | [13](iterations/iteration-13/exercise/README.md) | ページとタプルのバイト表現 |
+| [14](iterations/iteration-14/exercise/README.md) | ヒープファイルとデータディレクトリ |
