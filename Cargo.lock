@@ -261,6 +261,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ferrodb-18-solution"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "tempfile",
+ "winnow",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

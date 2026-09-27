@@ -1013,8 +1013,12 @@ Iteration 8で全行を調べていた一意性の検査を，インデックス
 - 行の可視性は，スナップショットとトランザクションの状態(進行中，コミット済み，中止)で決める．
 - `ROLLBACK`したトランザクションの変更は見えなくなる．
 - トランザクションの中でエラーが起きたら，`ROLLBACK`までの文を`25P02`で拒否する．
-- トランザクションの中での`START TRANSACTION`は`25001`とする．
+- トランザクションの中での`START TRANSACTION`は`25001`とし，トランザクションは続ける．
 - REPLのプロンプトは，トランザクションの中では`ferrodb*>`，失敗したトランザクションの中では`ferrodb!>`とする．
+- 失敗したトランザクションの中の`COMMIT`は中止し，`ROLLBACK`を返す．トランザクションの外の`COMMIT`と`ROLLBACK`は何もしない．
+- 表とインデックスを作る文と消す文は，トランザクションの外でだけ実行できる．中で実行すると`25001`(`CREATE TABLE cannot run inside a transaction block`など)とする．
+- スナップショットは文ごとに取る．
+- トランザクションの状態は，データディレクトリのファイル`xact`に置く．開き直したとき，進行中のまま残ったトランザクションは中止したものとみなす．
 
 ### 使用例
 
@@ -1036,6 +1040,11 @@ ferrodb> SELECT COUNT(*) FROM emp;
 
 - `txn`：`struct TxnId`，`struct TransactionManager`，`struct Snapshot`，`fn is_visible(header: &TupleHeader, snapshot: &Snapshot, ...) -> bool`
 - `database`：セッションの状態(トランザクションの外，中，失敗)
+- `storage::tuple`：`TupleHeader`(`xmin`と`xmax`)
+- `storage::heap`：見える版だけを返す`rows`と，版を削除済みにする`set_xmax`
+- `exec::dml`：`UPDATE`と`DELETE`は古い版を削除済みにする．
+- `exec::build`：演算子を作るための`BuildContext`
+- `repl`：トランザクションの状態に合わせたプロンプト
 
 ### 設計ドキュメントの更新
 
@@ -1043,6 +1052,7 @@ ferrodb> SELECT COUNT(*) FROM emp;
 - `code-types.md`：`TxnId`，`Snapshot`，`TupleHeader`，`TransactionManager`を加える．
 - `layout.md`：タプルヘッダーに`xmin`と`xmax`を加える．
 - `code-sequence.md`：`UPDATE`が新しい版を作る流れと，可視性の判定を加える．
+- `c4-container.md`：トランザクションの状態のファイルを加える．
 
 ### 学ぶこと
 
@@ -1051,7 +1061,10 @@ ferrodb> SELECT COUNT(*) FROM emp;
 
 ### 既存テストへの影響
 
-なし．
+- タプルにヘッダーの8バイトが加わるので，`row is too big`のメッセージの大きさと，ページに入る最大の文字列の長さが変わる．
+- `UPDATE`した行は新しい版として表の最後に置かれるので，`ORDER BY`のない`SELECT`の行の順序が変わる．
+- データディレクトリに`xact`が加わる．
+- `HeapFile::rows`が版を選ぶ関数を受け取り，`exec::dml`の関数がスナップショットとトランザクションの状態を受け取る．`exec::dml`の単体テストは，トランザクションの中で操作する形に変わる．
 
 ## Iteration 19：WALとクラッシュリカバリ
 

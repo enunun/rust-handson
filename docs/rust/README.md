@@ -22,3 +22,4 @@
 | [15](iteration-15.md) | ライフタイムと借用検査，ライフタイム注釈と省略の規則，参照を持つ構造体，`'_`と`'static`，`Drop`とRAII，`Cell`と`RefCell`，トレイト境界を持つジェネリックな構造体，`Box<dyn Trait>`へのトレイトの実装，`impl Fn`の引数 |
 | [16](iteration-16.md) | トレイトの関連関数と`Self`，スーパートレイト`Sized`，`^`と`cast_unsigned`，ライフタイムと型の引数を持つ構造体，`PhantomData`，`Iterator`の実装と関連型，`RangeBounds`と`Bound`，`partition_point`，`binary_search`，`split_off`，`windows`，借用が終わる時点 |
 | [17](iteration-17.md) | `enum`で型の違う値をまとめる，組の`match`，`enum`とトレイトオブジェクトの比較，`unreachable!`，`Bound`の`as_ref`，`map`，`cloned`，`\|`のパターンの束縛，フィールドを別々に借りる，複数の参照を受け取る関数のライフタイム |
+| [18](iteration-18.md) | ニュータイプと関連定数，`Copy`と`Clone`，`self`を受け取って値を消費するメソッド，`std::mem::take`と`#[default]`，`map_err`と`and_then`，値を捕まえるクロージャを渡す |
