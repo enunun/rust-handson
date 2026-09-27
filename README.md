@@ -71,3 +71,4 @@ Dev Containersを使わない場合は，次を用意する．
 | [14](iterations/iteration-14/exercise/README.md) | ヒープファイルとデータディレクトリ |
 | [15](iterations/iteration-15/exercise/README.md) | バッファプール |
 | [16](iterations/iteration-16/exercise/README.md) | B+木 |
+| [17](iterations/iteration-17/exercise/README.md) | インデックスの利用 |

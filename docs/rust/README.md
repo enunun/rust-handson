@@ -21,3 +21,4 @@
 | [14](iteration-14.md) | `std::fs`の関数と`io::ErrorKind`，`File`と`OpenOptions`，`Read`/`Write`/`Seek`と`read_exact`，`&File`での読み書き，`Path`と`PathBuf`，16進数の書式指定，`keys`と`cloned`，`&mut &[u8]`，`drop`，`clap`のderiveと機能(feature)，`ExitCode`，`tempfile`と開発用の依存 |
 | [15](iteration-15.md) | ライフタイムと借用検査，ライフタイム注釈と省略の規則，参照を持つ構造体，`'_`と`'static`，`Drop`とRAII，`Cell`と`RefCell`，トレイト境界を持つジェネリックな構造体，`Box<dyn Trait>`へのトレイトの実装，`impl Fn`の引数 |
 | [16](iteration-16.md) | トレイトの関連関数と`Self`，スーパートレイト`Sized`，`^`と`cast_unsigned`，ライフタイムと型の引数を持つ構造体，`PhantomData`，`Iterator`の実装と関連型，`RangeBounds`と`Bound`，`partition_point`，`binary_search`，`split_off`，`windows`，借用が終わる時点 |
+| [17](iteration-17.md) | `enum`で型の違う値をまとめる，組の`match`，`enum`とトレイトオブジェクトの比較，`unreachable!`，`Bound`の`as_ref`，`map`，`cloned`，`\|`のパターンの束縛，フィールドを別々に借りる，複数の参照を受け取る関数のライフタイム |

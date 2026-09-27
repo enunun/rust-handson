@@ -957,6 +957,10 @@ let entries: Vec<(i32, RowId)> = tree.range(10..50)?.collect::<Result<_, _>>()?;
 - `PRIMARY KEY`と`UNIQUE`の列には，自動でインデックスを作る．一意性の検査はインデックスで行う．
 - `WHERE col = 定数`と，`<`，`<=`，`>`，`>=`を`AND`でつないだ条件にインデックスが使えるなら，インデックススキャンを選ぶ．
 - `INSERT`，`UPDATE`，`DELETE`でインデックスも更新する．
+- 一意性制約のインデックスは，制約と同じ名前(`EMP_PKEY`など)で作る．表とインデックスは同じ名前を使えない(`42P07`)．
+- ないインデックスの`DROP INDEX`は`42704`，一意性制約のインデックスの`DROP INDEX`は`2BP01`とする．
+- `NULL`はインデックスに入れない．インデックスを使うのは，1つの表を読む`SELECT`とする．
+- インデックスは，名前の16進数に`.index`を付けたファイルに置く．
 
 ### 使用例
 
@@ -969,8 +973,13 @@ ferrodb> EXPLAIN SELECT name FROM emp WHERE salary >= 450;
 ### モジュール
 
 - `index`：`enum AnyIndex`(キーの型ごとの`BTree`をまとめる)
+- `index`：`struct ColumnIndex`(列の番号と`AnyIndex`の組)
 - `exec::index_scan`：`IndexScan`
 - `plan::planner`：インデックスを使える条件の検出
+- `sql::parser`：`CREATE INDEX`と`DROP INDEX`
+- `catalog`：`struct IndexDef`と，インデックスの定義の保存
+- `exec::dml`：行を変えるときにインデックスを更新する．
+- `database`：インデックスごとのバッファプール
 
 ### リファクタリング
 
@@ -981,6 +990,8 @@ Iteration 8で全行を調べていた一意性の検査を，インデックス
 - `c4-component.md`：`plan`と`exec`から`index`への依存を加える．
 - `code-types.md`：`AnyIndex`，`IndexScan`，カタログのインデックス情報を加える．
 - `code-sequence.md`：プランナーがスキャン方法を選ぶ流れを加える．
+- `c4-container.md`：インデックスのファイルを加える．
+- `layout.md`：カタログのファイルにインデックスの定義を加える．
 
 ### 学ぶこと
 
@@ -989,7 +1000,9 @@ Iteration 8で全行を調べていた一意性の検査を，インデックス
 
 ### 既存テストへの影響
 
-`PRIMARY KEY`を持つ表の`EXPLAIN`の期待値が変わる．
+- `exec::dml`の関数がインデックスを受け取る．全行を調べていた`check_constraints`の単体テストは，`check_not_null`と，インデックスで調べる一意性の検査のテストに変わる．
+- `plan::planner`の単体テストで，インデックスのある列の条件は`IndexScan`になる．
+- `PRIMARY KEY`の列を`WHERE`で比べる問い合わせの`EXPLAIN`は，`IndexScan`になる．
 
 ## Iteration 18：トランザクションとMVCC
 
